@@ -12,4 +12,4 @@ coverage:
 
 ## build: builds the command line tool to user bin location
 build:
-	@go build -o ${HOME}/bin/goracoon ./cmd/cli/*.go
+	@go build -o ${HOME}/bin/goracoon ./cmd/cli
