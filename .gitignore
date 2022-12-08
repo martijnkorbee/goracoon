@@ -1,0 +1,8 @@
+.vscode
+.idea
+coverage.out
+go.sum
+.env
+tmp/*
+vendor/*
+cache/testdata/tmp/*

@@ -1,0 +1,8 @@
+drop table if exists $TABLENAME$;
+
+CREATE TABLE $TABLENAME$ (
+	"id" INTEGER,
+	"created_at" TEXT NOT NULL DEFAULT 'datetime()',
+	"updated_at" TEXT NOT NULL DEFAULT 'datetime()',
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
