@@ -59,8 +59,6 @@ func doNew(appName string) error {
 
 	color.HiWhite("Finished creating .env file")
 
-	// TODO: create makefile support for windows/mac
-
 	// update the go.mod file
 	color.Yellow("\tCreating go.mod file...")
 
@@ -86,6 +84,19 @@ func doNew(appName string) error {
 	if err != nil {
 		exitGracefully(fmt.Errorf("couldn't change to new app dir: %s", err))
 	}
+
+	// TODO: create makefile support for windows
+	// update makefile
+	color.Yellow("\tUpdating makefile")
+
+	data, err = templateFS.ReadFile("Makefile.unix")
+	if err != nil {
+		exitGracefully(err)
+	}
+	makefile := strings.ReplaceAll(string(data), "racoonapp", appName)
+	os.WriteFile("Makefile", []byte(makefile), 0644)
+
+	color.HiWhite("Finished updating makefile")
 
 	// update the existing .go files with correct name and imports
 	color.Yellow("\tUpdating source files...")
