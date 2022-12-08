@@ -85,19 +85,6 @@ func doNew(appName string) error {
 		exitGracefully(fmt.Errorf("couldn't change to new app dir: %s", err))
 	}
 
-	// TODO: create makefile support for windows
-	// update makefile
-	color.Yellow("\tUpdating makefile")
-
-	data, err = templateFS.ReadFile("Makefile.unix")
-	if err != nil {
-		exitGracefully(err)
-	}
-	makefile := strings.ReplaceAll(string(data), "racoonapp", appName)
-	os.WriteFile("Makefile", []byte(makefile), 0644)
-
-	color.HiWhite("Finished updating makefile")
-
 	// update the existing .go files with correct name and imports
 	color.Yellow("\tUpdating source files...")
 	updateSource()
@@ -115,6 +102,27 @@ func doNew(appName string) error {
 	fmt.Println(string(output))
 
 	color.HiWhite("Finished running go mod tidy")
+
+	// TODO: create makefile support for windows
+	// update makefile
+	color.Yellow("\tUpdating makefile")
+
+	data, err = os.ReadFile("Makefile.unix")
+	if err != nil {
+		exitGracefully(err)
+	}
+	makefile := strings.ReplaceAll(string(data), "racoonapp", appName)
+	err = os.WriteFile("Makefile", []byte(makefile), 0644)
+	if err != nil {
+		exitGracefully(err)
+	}
+
+	err = os.Remove("Makefile.unix")
+	if err != nil {
+		color.Yellow("WARNING: could not remove Makefile.unix: ", err)
+	}
+
+	color.HiWhite("Finished updating makefile")
 
 	color.Green("\nDone, status: OK")
 
