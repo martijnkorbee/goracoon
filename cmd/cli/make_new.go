@@ -99,7 +99,6 @@ func doNew(appName string) error {
 		fmt.Println(fmt.Sprint(err) + ": " + string(output))
 		exitGracefully(err)
 	}
-	fmt.Println(string(output))
 
 	color.HiWhite("Finished running go mod tidy")
 
