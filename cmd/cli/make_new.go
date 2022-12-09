@@ -122,8 +122,18 @@ func doNew(appName string) error {
 	}
 
 	color.HiWhite("Finished updating makefile")
+	color.Green("Done creating new %s, status: OK", appName)
 
-	color.Green("\nDone, status: OK")
+	color.Yellow("\n\tBuilding: %s", appName)
+	cmd = exec.Command("make", "build")
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		color.Red(fmt.Sprint(err) + ": " + string(output))
+		exitGracefully(err)
+	}
+	color.HiWhite("%s", string(output))
+
+	color.Green("Start your app from dir %s and run: /tmp/%s", appName, appName)
 
 	return nil
 }

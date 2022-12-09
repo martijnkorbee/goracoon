@@ -15,26 +15,30 @@ Using: [upper/db/v4](https://upper.io/v4/ "upper/db/v4")
 
 ## Building the CLI
 
-Clone the project
-
+#### lone the project
 ```bash
   git clone https://github.com/martijnkorbee/goracoon.git
 ```
 
-Go to the project directory
-
+#### Go to the project directory
 ```bash
   cd goracoon
 ```
 
-Build CLI
-
+#### Build CLI
+Builds the CLI in tmp/
 ```bash
   make build
+  ./tmp/goracoon [command] [args]
+```
+
+#### Install CLI
+Installs the CLI in $GOPATH/bin. Make sure to export this path.
+```bash
+    make install
 ```
 
 ### CLI commands:
-
 ```bash
   goracoon [command] [args]
 ```

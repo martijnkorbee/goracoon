@@ -10,6 +10,14 @@ cover:
 coverage:
 	@go test -cover ./...
 
-## build: builds the command line tool to user bin location
+## build: builds the command line tool to tmp/
 build:
-	@go build -o ${HOME}/bin/goracoon ./cmd/cli
+	@echo "Building GoRacoon in .tmp/ ..."
+	@go build -o tmp/goracoon ./cmd/cli
+	@echo "GoRacoon has been built!"
+
+## install: runs go build and puts the binary in GOPATH bin
+install:
+	@echo "Installing GoRacoon in ${GOPATH}/bin ..."
+	@go build -o /${GOPATH}/bin/goracoon ./cmd/cli
+	@echo "GoRacoon has been installed!"
