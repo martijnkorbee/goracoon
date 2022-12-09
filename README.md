@@ -15,7 +15,7 @@ Using: [upper/db/v4](https://upper.io/v4/ "upper/db/v4")
 
 ## Building the CLI
 
-#### lone the project
+#### Clone the project
 ```bash
   git clone https://github.com/martijnkorbee/goracoon.git
 ```
