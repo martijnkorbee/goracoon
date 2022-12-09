@@ -35,7 +35,7 @@ Builds the CLI in tmp/
 #### Install CLI
 Installs the CLI in $GOPATH/bin. Make sure to export this path.
 ```bash
-    make install
+  make install
 ```
 
 ### CLI commands:
