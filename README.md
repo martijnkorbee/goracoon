@@ -1,8 +1,17 @@
 # GoRacoon 
 
-Laravel like framework. Special thanks to Trevor Sawler.
+Laravel like framework with embeded database and caching.
+Special thanks to [Trevor Sawler](https://github.com/tsawler "Trevor Sawler").
 
 ***
+
+## Supported databases/caching
+Using: [upper/db/v4](https://upper.io/v4/ "upper/db/v4")
+* Postgres
+* TODO: Adding built in support for MySQL/MariaDB and MSSQL
+* SQLite3
+* Redis
+* BadgerDB
 
 ## Building the CLI
 
@@ -41,7 +50,6 @@ Build CLI
 | `migrate`         | `down force`  | force down migration                                                          |
 | `migrate`         | `reset`       | runs all down migrations in reverse order then all up migrations              |
 | `make auth`       |               | creates and runs migrations for auth tables and creates models and middleware |
-| `make auth`       | `--migrate`   | use the migrate flag to also create the db table                              |
 | `make session`    |               | creates a table in the db to use as session store                             |
 | `make handler`    | `name`        | creates a stub handler in the handlers dir                                    |
 | `make model`      | `name`        | creates a new model in the data dir                                           |
