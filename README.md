@@ -1,8 +1,17 @@
 # GoRacoon 
 
-Laravel like framework. Special thanks to Trevor Sawler.
+Laravel like framework with embeded database and caching.
+Special thanks to [Trevor Sawler](https://github.com/tsawler "Trevor Sawler").
 
 ***
+
+## Supported databases/caching
+Using: [upper/db/v4](https://upper.io/v4/ "upper/db/v4")
+* Postgres
+* TODO: Adding built in support for MySQL/MariaDB and MSSQL
+* SQLite3
+* Redis
+* BadgerDB
 
 ## Building the CLI
 
