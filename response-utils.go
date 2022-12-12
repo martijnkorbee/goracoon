@@ -23,7 +23,7 @@ func (gr *Goracoon) ReadJSON(w http.ResponseWriter, r *http.Request, data interf
 
 	err = dec.Decode(&struct{}{})
 	if err != io.EOF {
-		return errors.New("body must only have only a single json value")
+		return errors.New("body must only have a single json value")
 	}
 
 	return nil
