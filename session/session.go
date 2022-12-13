@@ -11,7 +11,7 @@ import (
 	"github.com/alexedwards/scs/redisstore"
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
-	"github.com/dgraph-io/badger/v3"
+	"github.com/dgraph-io/badger"
 	"github.com/gomodule/redigo/redis"
 )
 

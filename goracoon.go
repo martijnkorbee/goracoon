@@ -11,7 +11,7 @@ import (
 
 	"github.com/CloudyKit/jet/v6"
 	"github.com/alexedwards/scs/v2"
-	"github.com/dgraph-io/badger/v3"
+	"github.com/dgraph-io/badger"
 	"github.com/go-chi/chi/v5"
 	"github.com/gomodule/redigo/redis"
 	"github.com/joho/godotenv"
