@@ -14,7 +14,7 @@ func (m *Middleware) AuthToken(next http.Handler) http.Handler {
 			payload.Error = true
 			payload.Message = "invalid authentication credentials"
 
-			_ = m.App.WriteJSON(w, http.StatusUnauthorized, payload)
+			_ = m.Racoon.WriteJSON(w, http.StatusUnauthorized, payload)
 		}
 	})
 }
