@@ -53,6 +53,7 @@ func showHelp() {
 | make model        | name          | creates a new model in the data dir                                           |
 | make model        | --migrate     | use the migrate flag to also create the db table                              |
 | make key          |               | generates a 32 character key                                                  |
+| make maile        | name          | make a new mail template                                                      |
 
 `
 

@@ -58,4 +58,5 @@ Installs the CLI in $GOPATH/bin. Make sure to export this path.
 | `make handler`    | `name`        | creates a stub handler in the handlers dir                                    |
 | `make model`      | `name`        | creates a new model in the data dir                                           |
 | `make model`      | `--migrate`   | use the migrate flag to also create the db table                              |
-| `make key`        |               | generates a 32 character key                                                  |   
+| `make key`        |               | generates a 32 character key                                                  |
+| `make maile`      | `name`        | make a new mail template                                                      |   
