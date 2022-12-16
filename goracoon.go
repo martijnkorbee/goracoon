@@ -16,6 +16,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/joho/godotenv"
 	"github.com/martijnkorbee/goracoon/cache"
+	"github.com/martijnkorbee/goracoon/mailer"
 	"github.com/martijnkorbee/goracoon/render"
 	"github.com/martijnkorbee/goracoon/session"
 	"github.com/robfig/cron/v3"
@@ -35,6 +36,7 @@ type Goracoon struct {
 	AppName        string
 	Debug          bool
 	Version        string
+	config         config
 	ErrorLog       *log.Logger
 	InfoLog        *log.Logger
 	RootPath       string
@@ -46,7 +48,7 @@ type Goracoon struct {
 	EncryptionKey  string
 	Cache          cache.Cache
 	Scheduler      *cron.Cron
-	config         config
+	Mail           mailer.Mail
 }
 
 // config used to extract configuration from .env to be used by application
@@ -71,6 +73,7 @@ func (gr *Goracoon) New(rootPath string) error {
 			"handlers",
 			"migrations",
 			"views",
+			"mail",
 			"data",
 			"public",
 			"tmp",
@@ -133,6 +136,9 @@ func (gr *Goracoon) New(rootPath string) error {
 
 	// add scheduler
 	gr.Scheduler = cron.New()
+
+	// add mailer
+	gr.Mail = gr.createMailer()
 
 	// connect to application database
 	if gr.config.dbType != "" {
@@ -227,6 +233,9 @@ func (gr *Goracoon) New(rootPath string) error {
 	}
 	gr.createRenderer()
 
+	// start mail channels
+	go gr.Mail.ListenForMail()
+
 	return nil
 }
 
@@ -304,6 +313,27 @@ func (gr *Goracoon) createRenderer() {
 	}
 
 	gr.Render = &myRenderer
+}
+
+func (gr *Goracoon) createMailer() mailer.Mail {
+	port, _ := strconv.Atoi(os.Getenv("SMTP_PORT"))
+
+	return mailer.Mail{
+		Domain:      os.Getenv("MAILER_DOMAIN"),
+		Templates:   gr.RootPath + "/mail",
+		Host:        os.Getenv("SMTP_HOST"),
+		Port:        port,
+		Username:    os.Getenv("SMTP_USERNAME"),
+		Password:    os.Getenv("SMTP_PASSWORD"),
+		Encryption:  os.Getenv("SMTP_ENCRYPTION"),
+		FromAddress: os.Getenv("SMTP_FROM_ADDRESS"),
+		FromName:    os.Getenv("SMTP_FROM_NAME"),
+		Jobs:        make(chan mailer.Message, 20),
+		Results:     make(chan mailer.Result, 20),
+		API:         os.Getenv("MAILER_API"),
+		API_KEY:     os.Getenv("MAILER_KEY"),
+		API_URL:     os.Getenv("MAILER_URL"),
+	}
 }
 
 func (gr *Goracoon) createClientRedisCache() *cache.RedisCache {
