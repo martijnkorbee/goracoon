@@ -51,6 +51,7 @@ type Goracoon struct {
 
 // config used to extract configuration from .env to be used by application
 type config struct {
+	host        string
 	port        string
 	renderer    string
 	sessionType string
@@ -96,6 +97,7 @@ func (gr *Goracoon) New(rootPath string) error {
 
 	// get application config from .env
 	gr.config = config{
+		host:        os.Getenv("HOST"),
 		port:        os.Getenv("PORT"),
 		renderer:    os.Getenv("RENDERER"),
 		sessionType: os.Getenv("SESSION_TYPE"),
@@ -267,7 +269,7 @@ func (gr *Goracoon) startLoggers() (*log.Logger, *log.Logger) {
 // ListenAndServe starts the webserver
 func (gr *Goracoon) ListenAndServe() {
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%s", gr.config.port),
+		Addr:         fmt.Sprintf("%s:%s", gr.config.host, gr.config.port),
 		ErrorLog:     gr.ErrorLog,
 		Handler:      gr.Routes,
 		IdleTimeout:  30 * time.Second,
