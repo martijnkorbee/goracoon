@@ -128,6 +128,11 @@ func (gr *Goracoon) New(rootPath string) error {
 		},
 	}
 
+	// assign application variables
+	gr.Debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
+	gr.Version = version
+	gr.RootPath = rootPath
+
 	// create and assign loggers
 	gr.InfoLog, gr.ErrorLog = gr.startLoggers()
 
@@ -190,11 +195,6 @@ func (gr *Goracoon) New(rootPath string) error {
 			gr.ErrorLog.Println(err)
 		}
 	}
-
-	// assign application variables
-	gr.Debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
-	gr.Version = version
-	gr.RootPath = rootPath
 
 	// add session (init session must be called before routes)
 	session := session.Session{
@@ -320,7 +320,7 @@ func (gr *Goracoon) createMailer() mailer.Mail {
 
 	return mailer.Mail{
 		Domain:      os.Getenv("MAILER_DOMAIN"),
-		Templates:   gr.RootPath + "mail",
+		Templates:   gr.RootPath + "/mail",
 		Host:        os.Getenv("SMTP_HOST"),
 		Port:        port,
 		Username:    os.Getenv("SMTP_USERNAME"),
