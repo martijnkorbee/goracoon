@@ -320,7 +320,7 @@ func (gr *Goracoon) createMailer() mailer.Mail {
 
 	return mailer.Mail{
 		Domain:      os.Getenv("MAILER_DOMAIN"),
-		Templates:   gr.RootPath + "/mail",
+		Templates:   gr.RootPath + "mail",
 		Host:        os.Getenv("SMTP_HOST"),
 		Port:        port,
 		Username:    os.Getenv("SMTP_USERNAME"),

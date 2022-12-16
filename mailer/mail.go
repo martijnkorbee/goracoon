@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"time"
 
-	"github.com/ainsleyclark/go-mail/drivers"
-	"github.com/ainsleyclark/go-mail/mail"
+	mail "github.com/xhit/go-simple-mail/v2"
 )
 
 type Mail struct {
@@ -76,41 +76,50 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 		return err
 	}
 
-	cfg := mail.Config{
-		URL:         m.Host,
-		FromAddress: m.FromAddress,
-		FromName:    m.FromName,
-		Password:    m.Password,
-		Port:        m.Port,
-	}
+	server := mail.NewSMTPClient()
 
-	mailer, err := drivers.NewSMTP(cfg)
+	server.Host = m.Host
+	server.Port = m.Port
+	server.Username = m.Username
+	server.Password = m.Password
+	server.Encryption = mail.EncryptionTLS
+	server.Authentication = mail.AuthLogin
+
+	server.KeepAlive = false
+
+	server.ConnectTimeout = 30 * time.Second
+	server.SendTimeout = 30 * time.Second
+
+	smtpClient, err := server.Connect()
 	if err != nil {
 		return err
 	}
 
-	tx := &mail.Transmission{
-		Recipients: msg.To,
-		Subject:    msg.Subject,
-		HTML:       formattedMsg,
-		PlainText:  plainTextMsg,
+	email := mail.NewMSG()
+	email.SetFrom(m.FromAddress).
+		AddTo(msg.To...).
+		SetSubject("test email")
+
+	email.SetBody(mail.TextHTML, formattedMsg)
+	email.AddAlternative(mail.TextPlain, plainTextMsg)
+
+	if len(msg.Attachments) > 0 {
+		for _, x := range msg.Attachments {
+			email.AddAttachment(x)
+		}
 	}
 
-	// TODO: add attachments
-
-	result, err := mailer.Send(tx)
+	err = email.Send(smtpClient)
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("%+v\n", result)
 
 	return nil
 }
 
 func (m *Mail) buildHTMLMessage(msg Message) (string, error) {
 
-	templateToRender := fmt.Sprintf("%s/%s/.html.tmpl", m.Templates, msg.Template)
+	templateToRender := fmt.Sprintf("%s/%s.html.tmpl", m.Templates, msg.Template)
 
 	// load a html template
 	t, err := template.New("email-html").ParseFiles(templateToRender)
@@ -130,7 +139,7 @@ func (m *Mail) buildHTMLMessage(msg Message) (string, error) {
 
 func (m *Mail) buildPlainTextMessage(msg Message) (string, error) {
 
-	templateToRender := fmt.Sprintf("%s/%s/.plain.tmpl", m.Templates, msg.Template)
+	templateToRender := fmt.Sprintf("%s/%s.plain.tmpl", m.Templates, msg.Template)
 
 	// load a template
 	t, err := template.New("email-plain").ParseFiles(templateToRender)
