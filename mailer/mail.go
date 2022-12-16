@@ -32,6 +32,8 @@ type Message struct {
 	From        string
 	FromName    string
 	To          []string
+	CC          []string
+	BCC         []string
 	Subject     string
 	Template    string
 	Attachments []string
@@ -98,16 +100,13 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 	email := mail.NewMSG()
 	email.SetFrom(m.FromAddress).
 		AddTo(msg.To...).
-		SetSubject("test email")
+		SetSubject("test email").
+		AddCc(msg.CC...).
+		AddBcc(msg.BCC...).
+		SetBody(mail.TextHTML, formattedMsg).
+		AddAlternative(mail.TextPlain, plainTextMsg)
 
-	email.SetBody(mail.TextHTML, formattedMsg)
-	email.AddAlternative(mail.TextPlain, plainTextMsg)
-
-	if len(msg.Attachments) > 0 {
-		for _, x := range msg.Attachments {
-			email.AddAttachment(x)
-		}
-	}
+	// TODO: add attachments
 
 	err = email.Send(smtpClient)
 	if err != nil {
