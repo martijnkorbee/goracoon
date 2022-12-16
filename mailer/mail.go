@@ -87,8 +87,8 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 
 	server.KeepAlive = false
 
-	server.ConnectTimeout = 30 * time.Second
-	server.SendTimeout = 30 * time.Second
+	server.ConnectTimeout = 15 * time.Second
+	server.SendTimeout = 15 * time.Second
 
 	smtpClient, err := server.Connect()
 	if err != nil {
