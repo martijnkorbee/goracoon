@@ -297,7 +297,7 @@ func (gr *Goracoon) ListenAndServe() {
 		defer badgerConnection.Close()
 	}
 
-	gr.InfoLog.Printf("Listening on port %s", gr.config.port)
+	gr.InfoLog.Printf("Listening on  %s:%s", gr.config.host, gr.config.port)
 	err := srv.ListenAndServe()
 	gr.ErrorLog.Fatal(err)
 }
