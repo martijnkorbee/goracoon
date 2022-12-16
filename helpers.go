@@ -3,7 +3,7 @@ package goracoon
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	cryptoRand "crypto/rand"
+	cryptorand "crypto/rand"
 	"encoding/base64"
 	"errors"
 	"io"
@@ -67,7 +67,7 @@ func (e *Encryption) Encrypt(text string) (string, error) {
 
 	cipherText := make([]byte, aes.BlockSize+len(plainText))
 	iv := cipherText[:aes.BlockSize]
-	if _, err := io.ReadFull(cryptoRand.Reader, iv); err != nil {
+	if _, err := io.ReadFull(cryptorand.Reader, iv); err != nil {
 		return "", err
 	}
 
