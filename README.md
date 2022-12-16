@@ -59,4 +59,4 @@ Installs the CLI in $GOPATH/bin. Make sure to export this path.
 | `make model`      | `name`        | creates a new model in the data dir                                           |
 | `make model`      | `--migrate`   | use the migrate flag to also create the db table                              |
 | `make key`        |               | generates a 32 character key                                                  |
-| `make mail`      | `name`        | make a new mail template                                                      |   
+| `make mail`       | `name`        | make a new mail template                                                      |   
