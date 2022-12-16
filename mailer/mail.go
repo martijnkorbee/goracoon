@@ -84,8 +84,26 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 	server.Port = m.Port
 	server.Username = m.Username
 	server.Password = m.Password
-	server.Encryption = mail.EncryptionTLS
-	server.Authentication = mail.AuthLogin
+	// set encryption
+	switch os.Getenv("SMTP_ENCRYPTION") {
+	case "TLS":
+		server.Encryption = mail.EncryptionSTARTTLS
+	case "SSL":
+		server.Encryption = mail.EncryptionSSLTLS
+	case "none":
+		server.Encryption = mail.EncryptionNone
+	default:
+		server.Encryption = mail.EncryptionSTARTTLS
+	}
+	// set authentication
+	switch os.Getenv("SMTP_AUTH_METHOD") {
+	case "login":
+		server.Authentication = mail.AuthLogin
+	case "CRAMMD5":
+		server.Authentication = mail.AuthCRAMMD5
+	default:
+		server.Authentication = mail.AuthPlain
+	}
 
 	server.KeepAlive = false
 
