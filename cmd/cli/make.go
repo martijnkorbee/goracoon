@@ -116,6 +116,8 @@ func doMake(arg2, arg3 string) error {
 			exitGracefully(err)
 		}
 
+		color.White("INFO: mail template created: " + strings.ToLower(arg3))
+
 	default:
 		// default
 	}
