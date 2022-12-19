@@ -395,10 +395,10 @@ func (r *RPCServer) MaintenanceMode(inMaintenance bool, resp *string) error {
 
 	if inMaintenance {
 		maintenanceMode = true
-		*resp = "Server in maintenance mode!"
+		*resp = "Server in maintenance mode."
 	} else {
 		maintenanceMode = false
-		*resp = "Server live!"
+		*resp = "Server live."
 	}
 
 	return nil
