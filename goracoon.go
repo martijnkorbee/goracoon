@@ -2,11 +2,7 @@ package goracoon
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
-	"net"
-	"net/http"
-	"net/rpc"
 	"os"
 	"strconv"
 	"time"
@@ -236,9 +232,6 @@ func (gr *Goracoon) New(rootPath string) error {
 	}
 	gr.createRenderer()
 
-	// start mail channels
-	go gr.Mail.ListenForMail()
-
 	return nil
 }
 
@@ -276,36 +269,6 @@ func (gr *Goracoon) startLoggers() (*log.Logger, *log.Logger) {
 	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	return infoLog, errorLog
-}
-
-// ListenAndServe starts the webserver
-func (gr *Goracoon) ListenAndServe() {
-	srv := &http.Server{
-		Addr:         fmt.Sprintf("%s:%s", gr.config.host, gr.config.port),
-		ErrorLog:     gr.ErrorLog,
-		Handler:      gr.Routes,
-		IdleTimeout:  30 * time.Second,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 600 * time.Second,
-	}
-
-	// defer close db and/or cache connections if open
-	if gr.DB.ConnectionPool != nil {
-		defer gr.DB.ConnectionPool.Close()
-	}
-	if redisPool != nil {
-		defer redisPool.Close()
-	}
-	if badgerConnection != nil {
-		defer badgerConnection.Close()
-	}
-
-	// Start RPC server
-	go gr.listenRPC()
-
-	gr.InfoLog.Printf("Starting webserver on %s:%s", gr.config.host, gr.config.port)
-	err := srv.ListenAndServe()
-	gr.ErrorLog.Fatal(err)
 }
 
 // createRenderer
@@ -387,47 +350,4 @@ func (gr *Goracoon) createBadgerConnection() *badger.DB {
 		return nil
 	}
 	return db
-}
-
-type RPCServer struct{}
-
-func (r *RPCServer) MaintenanceMode(inMaintenance bool, resp *string) error {
-
-	if inMaintenance {
-		maintenanceMode = true
-		*resp = "Server in maintenance mode."
-	} else {
-		maintenanceMode = false
-		*resp = "Server live."
-	}
-
-	return nil
-}
-
-func (gr *Goracoon) listenRPC() {
-	// if no rpc port is specified, don't start
-	rpcPort := os.Getenv("RPC_PORT")
-
-	if rpcPort != "" {
-		gr.InfoLog.Println("Starting RPC server on port:", rpcPort)
-		err := rpc.Register(new(RPCServer))
-		if err != nil {
-			gr.ErrorLog.Println(err)
-			return
-		}
-
-		listen, err := net.Listen("tcp", "127.0.0.1:"+rpcPort)
-		if err != nil {
-			gr.ErrorLog.Println(err)
-			return
-		}
-
-		for {
-			rpcConn, err := listen.Accept()
-			if err != nil {
-				continue
-			}
-			go rpc.ServeConn(rpcConn)
-		}
-	}
 }
