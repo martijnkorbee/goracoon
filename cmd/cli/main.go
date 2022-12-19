@@ -41,7 +41,7 @@ func main() {
 
 		switch arg2 {
 		case "up":
-			rpcMaintenanceMode(true)
+			rpcMaintenanceMode(false)
 		case "down":
 			rpcMaintenanceMode(true)
 		default:

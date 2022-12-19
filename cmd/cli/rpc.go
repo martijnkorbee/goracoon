@@ -15,7 +15,7 @@ func rpcMaintenanceMode(inMaintenanceMode bool) {
 		exitGracefully(err)
 	}
 
-	color.Yellow("\tConnected to...")
+	color.Yellow("\tConnected to RPC client...")
 	var result string
 	err = c.Call("RPCServer.MaintenanceMode", inMaintenanceMode, &result)
 	if err != nil {
