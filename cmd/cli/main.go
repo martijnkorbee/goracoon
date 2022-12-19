@@ -30,6 +30,24 @@ func main() {
 	case "version":
 		color.Yellow("Application version: " + version)
 
+	case "maintenance":
+		if arg2 == "" {
+			exitGracefully(errors.New("maintenance requires up or down: maintenance up|down"))
+		}
+
+		if noDotEnv {
+			exitGracefully(errors.New("no .env file in current directory"))
+		}
+
+		switch arg2 {
+		case "up":
+			rpcMaintenanceMode(true)
+		case "down":
+			rpcMaintenanceMode(true)
+		default:
+			//
+		}
+
 	case "new":
 		if arg2 == "" {
 			exitGracefully(errors.New("new requires an application name"))

@@ -18,6 +18,7 @@ func (gr *Goracoon) routes() http.Handler {
 		mux.Use(middleware.Logger)
 	}
 	mux.Use(middleware.Recoverer)
+	mux.Use(gr.CheckMaintenanceMode)
 
 	// added middleware
 	mux.Use(gr.SessionLoad)

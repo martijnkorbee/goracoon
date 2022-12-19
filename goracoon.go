@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"net/rpc"
 	"os"
 	"strconv"
 	"time"
@@ -29,8 +31,9 @@ var redisPool *redis.Pool
 var badgerCache *cache.BadgerCache
 var badgerConnection *badger.DB
 
-//	goracoon is the overall type for the     goracoon package. Members that are exported in this type
-//
+var maintenanceMode bool
+
+//	goracoon is the overall type for the goracoon package. Members that are exported in this type
 // are available to any application that uses it.
 type Goracoon struct {
 	AppName        string
@@ -297,7 +300,10 @@ func (gr *Goracoon) ListenAndServe() {
 		defer badgerConnection.Close()
 	}
 
-	gr.InfoLog.Printf("Listening on  %s:%s", gr.config.host, gr.config.port)
+	// Start RPC server
+	go gr.listenRPC()
+
+	gr.InfoLog.Printf("Starting webserver on %s:%s", gr.config.host, gr.config.port)
 	err := srv.ListenAndServe()
 	gr.ErrorLog.Fatal(err)
 }
@@ -381,4 +387,47 @@ func (gr *Goracoon) createBadgerConnection() *badger.DB {
 		return nil
 	}
 	return db
+}
+
+type RPCServer struct{}
+
+func (r *RPCServer) MaintenanceMode(inMaintenance bool, resp *string) error {
+
+	if inMaintenance {
+		maintenanceMode = true
+		*resp = "Server in maintenance mode!"
+	} else {
+		maintenanceMode = false
+		*resp = "Server live!"
+	}
+
+	return nil
+}
+
+func (gr *Goracoon) listenRPC() {
+	// if no rpc port is specified, don't start
+	rpcPort := os.Getenv("RPC_PORT")
+
+	if rpcPort != "" {
+		gr.InfoLog.Println("Starting RPC server on port:", rpcPort)
+		err := rpc.Register(new(RPCServer))
+		if err != nil {
+			gr.ErrorLog.Println(err)
+			return
+		}
+
+		listen, err := net.Listen("tcp", "127.0.0.1:"+rpcPort)
+		if err != nil {
+			gr.ErrorLog.Println(err)
+			return
+		}
+
+		for {
+			rpcConn, err := listen.Accept()
+			if err != nil {
+				continue
+			}
+			go rpc.ServeConn(rpcConn)
+		}
+	}
 }
