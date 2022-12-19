@@ -3,6 +3,7 @@ package goracoon
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -33,14 +34,27 @@ func (gr *Goracoon) NoSurf(next http.Handler) http.Handler {
 func (gr *Goracoon) CheckMaintenanceMode(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if maintenanceMode {
-			if strings.Contains(r.URL.Path, "/api/") {
-				_ = gr.WriteJSON(w, http.StatusServiceUnavailable, map[string]string{
-					"message": "under maintenance",
-				})
-				return
-			}
 
-			if !strings.Contains(r.URL.Path, "/public/maintenance.html") {
+			allowedURLS := strings.Split(os.Getenv("ALLOWED_URLS"), ",")
+			allowedURLS = append(allowedURLS, "public/maintenance.html")
+
+			allowed := func() bool {
+				for _, url := range allowedURLS {
+					if strings.Contains(r.URL.Path, url) {
+						return true
+					}
+				}
+				return false
+			}()
+
+			if !allowed {
+				if strings.Contains(r.URL.Path, "/api/") {
+					_ = gr.WriteJSON(w, http.StatusServiceUnavailable, map[string]string{
+						"message": "under maintenance",
+					})
+					return
+				}
+
 				w.WriteHeader(http.StatusServiceUnavailable)
 				w.Header().Set("Retry-After:", "300")
 				w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, post-check=0, pre-check=0")
