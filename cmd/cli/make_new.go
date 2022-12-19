@@ -110,7 +110,7 @@ func doNew(appName string) error {
 	if err != nil {
 		exitGracefully(err)
 	}
-	makefile := strings.ReplaceAll(string(data), "racoonapp", appName)
+	makefile := strings.ReplaceAll(string(data), "${APP_NAME}", appName)
 	err = os.WriteFile("Makefile", []byte(makefile), 0644)
 	if err != nil {
 		exitGracefully(err)
