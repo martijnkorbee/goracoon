@@ -98,6 +98,26 @@ func doMake(arg2, arg3 string) error {
 			exitGracefully(err)
 		}
 
+	case "mail":
+		if arg3 == "" {
+			exitGracefully(errors.New("you must give the mail template a name"))
+		}
+
+		htmlMail := racoon.RootPath + "/mail/" + strings.ToLower(arg3) + ".html.tmpl"
+		plainMail := racoon.RootPath + "/mail/" + strings.ToLower(arg3) + ".plain.tmpl"
+
+		err := copyFileFromTemplate("templates/mailer/mail.html.tmpl", htmlMail)
+		if err != nil {
+			exitGracefully(err)
+		}
+
+		err = copyFileFromTemplate("templates/mailer/mail.plain.tmpl", plainMail)
+		if err != nil {
+			exitGracefully(err)
+		}
+
+		color.White("INFO: mail template created: " + strings.ToLower(arg3))
+
 	default:
 		// default
 	}

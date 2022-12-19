@@ -2,9 +2,7 @@ package goracoon
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -16,6 +14,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/joho/godotenv"
 	"github.com/martijnkorbee/goracoon/cache"
+	"github.com/martijnkorbee/goracoon/mailer"
 	"github.com/martijnkorbee/goracoon/render"
 	"github.com/martijnkorbee/goracoon/session"
 	"github.com/robfig/cron/v3"
@@ -28,13 +27,15 @@ var redisPool *redis.Pool
 var badgerCache *cache.BadgerCache
 var badgerConnection *badger.DB
 
-//	goracoon is the overall type for the     goracoon package. Members that are exported in this type
-//
+var maintenanceMode bool
+
+//	goracoon is the overall type for the goracoon package. Members that are exported in this type
 // are available to any application that uses it.
 type Goracoon struct {
 	AppName        string
 	Debug          bool
 	Version        string
+	config         config
 	ErrorLog       *log.Logger
 	InfoLog        *log.Logger
 	RootPath       string
@@ -46,11 +47,12 @@ type Goracoon struct {
 	EncryptionKey  string
 	Cache          cache.Cache
 	Scheduler      *cron.Cron
-	config         config
+	Mail           mailer.Mail
 }
 
 // config used to extract configuration from .env to be used by application
 type config struct {
+	host        string
 	port        string
 	renderer    string
 	sessionType string
@@ -70,6 +72,7 @@ func (gr *Goracoon) New(rootPath string) error {
 			"handlers",
 			"migrations",
 			"views",
+			"mail",
 			"data",
 			"public",
 			"tmp",
@@ -96,6 +99,7 @@ func (gr *Goracoon) New(rootPath string) error {
 
 	// get application config from .env
 	gr.config = config{
+		host:        os.Getenv("HOST"),
 		port:        os.Getenv("PORT"),
 		renderer:    os.Getenv("RENDERER"),
 		sessionType: os.Getenv("SESSION_TYPE"),
@@ -123,6 +127,11 @@ func (gr *Goracoon) New(rootPath string) error {
 		},
 	}
 
+	// assign application variables
+	gr.Debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
+	gr.Version = version
+	gr.RootPath = rootPath
+
 	// create and assign loggers
 	gr.InfoLog, gr.ErrorLog = gr.startLoggers()
 
@@ -131,6 +140,9 @@ func (gr *Goracoon) New(rootPath string) error {
 
 	// add scheduler
 	gr.Scheduler = cron.New()
+
+	// add mailer
+	gr.Mail = gr.createMailer()
 
 	// connect to application database
 	if gr.config.dbType != "" {
@@ -182,11 +194,6 @@ func (gr *Goracoon) New(rootPath string) error {
 			gr.ErrorLog.Println(err)
 		}
 	}
-
-	// assign application variables
-	gr.Debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
-	gr.Version = version
-	gr.RootPath = rootPath
 
 	// add session (init session must be called before routes)
 	session := session.Session{
@@ -264,33 +271,6 @@ func (gr *Goracoon) startLoggers() (*log.Logger, *log.Logger) {
 	return infoLog, errorLog
 }
 
-// ListenAndServe starts the webserver
-func (gr *Goracoon) ListenAndServe() {
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%s", gr.config.port),
-		ErrorLog:     gr.ErrorLog,
-		Handler:      gr.Routes,
-		IdleTimeout:  30 * time.Second,
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 600 * time.Second,
-	}
-
-	// defer close db and/or cache connections if open
-	if gr.DB.ConnectionPool != nil {
-		defer gr.DB.ConnectionPool.Close()
-	}
-	if redisPool != nil {
-		defer redisPool.Close()
-	}
-	if badgerConnection != nil {
-		defer badgerConnection.Close()
-	}
-
-	gr.InfoLog.Printf("Listening on port %s", gr.config.port)
-	err := srv.ListenAndServe()
-	gr.ErrorLog.Fatal(err)
-}
-
 // createRenderer
 func (gr *Goracoon) createRenderer() {
 	myRenderer := render.Render{
@@ -302,6 +282,27 @@ func (gr *Goracoon) createRenderer() {
 	}
 
 	gr.Render = &myRenderer
+}
+
+func (gr *Goracoon) createMailer() mailer.Mail {
+	port, _ := strconv.Atoi(os.Getenv("SMTP_PORT"))
+
+	return mailer.Mail{
+		Domain:      os.Getenv("MAILER_DOMAIN"),
+		Templates:   gr.RootPath + "/mail",
+		Host:        os.Getenv("SMTP_HOST"),
+		Port:        port,
+		Username:    os.Getenv("SMTP_USERNAME"),
+		Password:    os.Getenv("SMTP_PASSWORD"),
+		Encryption:  os.Getenv("SMTP_ENCRYPTION"),
+		FromAddress: os.Getenv("SMTP_FROM_ADDRESS"),
+		FromName:    os.Getenv("SMTP_FROM_NAME"),
+		Jobs:        make(chan mailer.Message, 20),
+		Results:     make(chan mailer.Result, 20),
+		API:         os.Getenv("MAILER_API"),
+		API_KEY:     os.Getenv("MAILER_KEY"),
+		API_URL:     os.Getenv("MAILER_URL"),
+	}
 }
 
 func (gr *Goracoon) createClientRedisCache() *cache.RedisCache {

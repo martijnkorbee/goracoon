@@ -47,6 +47,7 @@ Installs the CLI in $GOPATH/bin. Make sure to export this path.
 | :-----------------| :-------------| :-----------------------------------------------------------------------------|
 | `help`            |               | show help text                                                                |
 | `version`         |               | show version                                                                  |
+| `maintenance`     | `up|down`     | put the application in or out of maintenance mode                             |   
 | `make new`        | `appname`     | creates a new skeleton app                                                    |
 | `make migration`  | `name`        | creates 2 new up and down migrations                                          |
 | `migrate`         |               | runs all non run up and down migrations                                       |
@@ -58,3 +59,5 @@ Installs the CLI in $GOPATH/bin. Make sure to export this path.
 | `make handler`    | `name`        | creates a stub handler in the handlers dir                                    |
 | `make model`      | `name`        | creates a new model in the data dir                                           |
 | `make model`      | `--migrate`   | use the migrate flag to also create the db table                              |
+| `make key`        |               | generates a 32 character key                                                  |
+| `make mail`       | `name`        | make a new mail template                                                      |
