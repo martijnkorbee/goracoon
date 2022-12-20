@@ -1,6 +1,7 @@
 package goracoon
 
 import (
+	"fmt"
 	"net"
 	"net/rpc"
 	"os"
@@ -26,16 +27,16 @@ func (gr *Goracoon) listenRPC() {
 	rpcPort := os.Getenv("RPC_PORT")
 
 	if rpcPort != "" {
-		gr.InfoLog.Println("Starting RPC server on port:", rpcPort)
+		gr.Log.Info().Msg(fmt.Sprintf("Starting RPC server on port:%s", rpcPort))
 		err := rpc.Register(new(RPCServer))
 		if err != nil {
-			gr.ErrorLog.Println(err)
+			gr.Log.Error().Err(err).Msg("")
 			return
 		}
 
 		listen, err := net.Listen("tcp", "127.0.0.1:"+rpcPort)
 		if err != nil {
-			gr.ErrorLog.Println(err)
+			gr.Log.Error().Err(err).Msg("")
 			return
 		}
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httplog"
 )
 
 func (gr *Goracoon) routes() http.Handler {
@@ -15,7 +16,7 @@ func (gr *Goracoon) routes() http.Handler {
 	mux.Use(middleware.RequestID)
 	mux.Use(middleware.RealIP)
 	if gr.Debug {
-		mux.Use(middleware.Logger)
+		mux.Use(httplog.RequestLogger(*gr.Log))
 	}
 	mux.Use(middleware.Recoverer)
 	mux.Use(gr.CheckMaintenanceMode)

@@ -36,3 +36,18 @@ type cookieConfig struct {
 	secure   string
 	domain   string
 }
+
+type loggerConfig struct {
+	debug         bool
+	consoleOutput string
+	fileOutput    string
+	fileConfig    loggerFileConfig
+}
+
+type loggerFileConfig struct {
+	filename   string
+	maxAge     int
+	maxBackups int
+	localTime  bool
+	compress   bool
+}

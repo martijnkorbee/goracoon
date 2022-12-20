@@ -3,8 +3,6 @@ package goracoon
 import (
 	"database/sql"
 	"fmt"
-	"io"
-	"log"
 	"os"
 	"strconv"
 	"time"
@@ -16,13 +14,18 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/joho/godotenv"
 	"github.com/martijnkorbee/goracoon/cache"
+	"github.com/martijnkorbee/goracoon/logger"
 	"github.com/martijnkorbee/goracoon/mailer"
 	"github.com/martijnkorbee/goracoon/render"
 	"github.com/martijnkorbee/goracoon/session"
 	"github.com/robfig/cron/v3"
+	"github.com/rs/zerolog"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 const version = "1.0.0"
+
+var logOut *os.File
 
 var redisCache *cache.RedisCache
 var redisPool *redis.Pool
@@ -38,8 +41,7 @@ type Goracoon struct {
 	Debug          bool
 	Version        string
 	config         config
-	ErrorLog       *log.Logger
-	InfoLog        *log.Logger
+	Log            *zerolog.Logger
 	RootPath       string
 	SessionManager *scs.SessionManager
 	Routes         *chi.Mux
@@ -100,47 +102,25 @@ func (gr *Goracoon) New(rootPath string) error {
 	}
 
 	// get application config from .env
-	gr.config = config{
-		host:        os.Getenv("HOST"),
-		port:        os.Getenv("PORT"),
-		renderer:    os.Getenv("RENDERER"),
-		sessionType: os.Getenv("SESSION_TYPE"),
-		cacheType:   os.Getenv("CACHE"),
-		dbType:      os.Getenv("DATABASE_TYPE"),
-		dbConfig: databaseConfig{
-			host:     os.Getenv("DATABASE_HOST"),
-			port:     os.Getenv("DATABASE_PORT"),
-			user:     os.Getenv("DATABASE_USER"),
-			name:     os.Getenv("DATABASE_NAME"),
-			password: os.Getenv("DATABASE_PASS"),
-			sslMode:  os.Getenv("DATABASE_SSL_MODE"),
-		},
-		cookie: cookieConfig{
-			name:     os.Getenv("COOKIE_NAME"),
-			lifeTime: os.Getenv("COOKIE_LIFETIME"),
-			persist:  os.Getenv("COOKIE_PERSIST"),
-			secure:   os.Getenv("COOKIE_SECURE"),
-			domain:   os.Getenv("COOKIE_DOMAIN"),
-		},
-		redis: redisConfig{
-			host:     os.Getenv("REDIS_HOST"),
-			password: os.Getenv("REDIS_PASSWORD"),
-			prefix:   os.Getenv("REDIS_PREFIX"),
-		},
-	}
+	gr.loadConfig()
 
 	// assign application variables
 	gr.Debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
 	gr.Version = version
 	gr.RootPath = rootPath
 
-	// create and assign loggers
-	logOut, err := os.OpenFile(fmt.Sprintf("%s/logs/log.txt", gr.RootPath), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		gr.ErrorLog.Fatal(err)
+	// start loggers
+	l := logger.Logger{
+		Debug:         gr.Debug,
+		ConsoleOutput: os.Getenv("LOG_CONSOLE"),
+		FileOutput:    os.Getenv("LOG_FILE"),
+		FileConfig: lumberjack.Logger{
+			Filename:   gr.RootPath + "/logs/log.log",
+			MaxBackups: 2,
+			LocalTime:  true,
+		},
 	}
-	gr.InfoLog, gr.ErrorLog = gr.startLoggers(logOut)
-	defer logOut.Close()
+	gr.Log = l.StartLoggers()
 
 	// load encryption key
 	gr.EncryptionKey = os.Getenv("KEY")
@@ -155,9 +135,9 @@ func (gr *Goracoon) New(rootPath string) error {
 	if gr.config.dbType != "" {
 		db, err := gr.OpenDB(gr.config.dbType, gr.BuildDSN(gr.config.dbType))
 		if err != nil {
-			gr.ErrorLog.Fatal(err)
+			gr.Log.Fatal().Err(err).Msgf("could not start db connection")
 		} else {
-			gr.InfoLog.Println("connected to application database:", gr.config.dbType)
+			gr.Log.Info().Msg(fmt.Sprintf("connected to application database:%s", gr.config.dbType))
 		}
 
 		gr.DB = Database{
@@ -173,9 +153,9 @@ func (gr *Goracoon) New(rootPath string) error {
 		// check for connection
 		ok, err := redisCache.Ping()
 		if err != nil {
-			gr.ErrorLog.Fatal("could not connect to redis:", err)
+			gr.Log.Fatal().Err(err).Msgf("could not connect to redis")
 		} else {
-			gr.InfoLog.Println("connected to redis, replied with:", ok)
+			gr.Log.Info().Msg(fmt.Sprintf("connected to redis, replied with:%s", ok))
 		}
 
 		// add cache client
@@ -196,7 +176,7 @@ func (gr *Goracoon) New(rootPath string) error {
 			badgerCache.Connection.RunValueLogGC(0.7)
 		})
 		if err != nil {
-			gr.ErrorLog.Println(err)
+			gr.Log.Error().Err(err).Msg("")
 		}
 	}
 
@@ -258,6 +238,37 @@ func (gr *Goracoon) Init(p initPaths) error {
 	return nil
 }
 
+func (gr *Goracoon) loadConfig() {
+	gr.config = config{
+		host:        os.Getenv("HOST"),
+		port:        os.Getenv("PORT"),
+		renderer:    os.Getenv("RENDERER"),
+		sessionType: os.Getenv("SESSION_TYPE"),
+		cacheType:   os.Getenv("CACHE"),
+		dbType:      os.Getenv("DATABASE_TYPE"),
+		dbConfig: databaseConfig{
+			host:     os.Getenv("DATABASE_HOST"),
+			port:     os.Getenv("DATABASE_PORT"),
+			user:     os.Getenv("DATABASE_USER"),
+			name:     os.Getenv("DATABASE_NAME"),
+			password: os.Getenv("DATABASE_PASS"),
+			sslMode:  os.Getenv("DATABASE_SSL_MODE"),
+		},
+		cookie: cookieConfig{
+			name:     os.Getenv("COOKIE_NAME"),
+			lifeTime: os.Getenv("COOKIE_LIFETIME"),
+			persist:  os.Getenv("COOKIE_PERSIST"),
+			secure:   os.Getenv("COOKIE_SECURE"),
+			domain:   os.Getenv("COOKIE_DOMAIN"),
+		},
+		redis: redisConfig{
+			host:     os.Getenv("REDIS_HOST"),
+			password: os.Getenv("REDIS_PASSWORD"),
+			prefix:   os.Getenv("REDIS_PREFIX"),
+		},
+	}
+}
+
 // checkDotEnv creates the .env file if doesn't exist
 func (gr *Goracoon) checkDotEnv(path string) error {
 	err := gr.CreateFileIfNotExists(path + "/.env")
@@ -266,17 +277,6 @@ func (gr *Goracoon) checkDotEnv(path string) error {
 	}
 
 	return nil
-}
-
-// startLoggers creates the application's loggers
-func (gr *Goracoon) startLoggers(out io.Writer) (*log.Logger, *log.Logger) {
-	var infoLog *log.Logger
-	var errorLog *log.Logger
-
-	infoLog = log.New(out, "INFO:\t", log.Lmsgprefix|log.LstdFlags|log.Lshortfile)
-	errorLog = log.New(out, "ERROR:\t", log.Lmsgprefix|log.LstdFlags|log.Lshortfile)
-
-	return infoLog, errorLog
 }
 
 // createRenderer
@@ -350,7 +350,7 @@ func (gr *Goracoon) createClientBadgerCache() *cache.BadgerCache {
 func (gr *Goracoon) createBadgerConnection() *badger.DB {
 	err := gr.CreateDirIfNotExists("./tmp/badger")
 	if err != nil {
-		gr.ErrorLog.Println(err)
+		gr.Log.Error().Err(err).Msg("")
 	}
 
 	db, err := badger.Open(badger.DefaultOptions("./tmp/badger"))
