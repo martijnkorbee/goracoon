@@ -2,6 +2,8 @@ package goracoon
 
 import (
 	"database/sql"
+	"fmt"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -133,7 +135,12 @@ func (gr *Goracoon) New(rootPath string) error {
 	gr.RootPath = rootPath
 
 	// create and assign loggers
-	gr.InfoLog, gr.ErrorLog = gr.startLoggers()
+	logOut, err := os.OpenFile(fmt.Sprintf("%s/logs/log.txt", gr.RootPath), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		gr.ErrorLog.Fatal(err)
+	}
+	gr.InfoLog, gr.ErrorLog = gr.startLoggers(logOut)
+	defer logOut.Close()
 
 	// load encryption key
 	gr.EncryptionKey = os.Getenv("KEY")
@@ -148,8 +155,7 @@ func (gr *Goracoon) New(rootPath string) error {
 	if gr.config.dbType != "" {
 		db, err := gr.OpenDB(gr.config.dbType, gr.BuildDSN(gr.config.dbType))
 		if err != nil {
-			gr.ErrorLog.Println(err)
-			os.Exit(1)
+			gr.ErrorLog.Fatal(err)
 		} else {
 			gr.InfoLog.Println("connected to application database:", gr.config.dbType)
 		}
@@ -167,8 +173,7 @@ func (gr *Goracoon) New(rootPath string) error {
 		// check for connection
 		ok, err := redisCache.Ping()
 		if err != nil {
-			gr.ErrorLog.Println("could not connect to redis:", err)
-			os.Exit(1)
+			gr.ErrorLog.Fatal("could not connect to redis:", err)
 		} else {
 			gr.InfoLog.Println("connected to redis, replied with:", ok)
 		}
@@ -264,12 +269,12 @@ func (gr *Goracoon) checkDotEnv(path string) error {
 }
 
 // startLoggers creates the application's loggers
-func (gr *Goracoon) startLoggers() (*log.Logger, *log.Logger) {
+func (gr *Goracoon) startLoggers(out io.Writer) (*log.Logger, *log.Logger) {
 	var infoLog *log.Logger
 	var errorLog *log.Logger
 
-	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	infoLog = log.New(out, "INFO:\t", log.Lmsgprefix|log.LstdFlags|log.Lshortfile)
+	errorLog = log.New(out, "ERROR:\t", log.Lmsgprefix|log.LstdFlags|log.Lshortfile)
 
 	return infoLog, errorLog
 }
