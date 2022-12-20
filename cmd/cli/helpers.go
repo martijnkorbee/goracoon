@@ -41,7 +41,7 @@ func showHelp() {
 | :-----------------| :-------------| :-----------------------------------------------------------------------------|
 | help              |               | show help text                                                                |
 | version           |               | show version                                                                  |
-| maintenance       | up|down       | put the application in or out of maintenance mode                             |
+| maintenance       | up/down       | put the application in or out of maintenance mode                             |
 | make new          | appname       | creates a new skeleton app                                                    |
 | make migration    | name          | creates 2 new up and down migrations                                          |
 | migrate           |               | runs all non run up and down migrations                                       |
