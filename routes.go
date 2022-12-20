@@ -13,12 +13,8 @@ func (gr *Goracoon) routes() http.Handler {
 	mux := chi.NewRouter()
 
 	// default middleware
-	mux.Use(middleware.RequestID)
 	mux.Use(middleware.RealIP)
-	if gr.Debug {
-		mux.Use(httplog.RequestLogger(*gr.Log))
-	}
-	mux.Use(middleware.Recoverer)
+	mux.Use(httplog.RequestLogger(*gr.HTPPLog))
 	mux.Use(gr.CheckMaintenanceMode)
 
 	// added middleware

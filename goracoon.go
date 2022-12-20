@@ -34,14 +34,15 @@ var badgerConnection *badger.DB
 
 var maintenanceMode bool
 
-//	goracoon is the overall type for the goracoon package. Members that are exported in this type
-// are available to any application that uses it.
+// goracoon is the overall type for the goracoon package.
+// Members that are exported in this type are available to any application that uses it.
 type Goracoon struct {
 	AppName        string
 	Debug          bool
 	Version        string
 	config         config
 	Log            *zerolog.Logger
+	HTPPLog        *zerolog.Logger
 	RootPath       string
 	SessionManager *scs.SessionManager
 	Routes         *chi.Mux
@@ -121,6 +122,18 @@ func (gr *Goracoon) New(rootPath string) error {
 		},
 	}
 	gr.Log = l.StartLoggers()
+
+	httpl := logger.Logger{
+		Debug:         gr.Debug,
+		ConsoleOutput: os.Getenv("LOG_HTTP_CONSOLE"),
+		FileOutput:    os.Getenv("LOG_HTTP_FILE"),
+		FileConfig: lumberjack.Logger{
+			Filename:   gr.RootPath + "/logs/httplog.log",
+			MaxBackups: 2,
+			LocalTime:  true,
+		},
+	}
+	gr.HTPPLog = httpl.StartLoggers()
 
 	// load encryption key
 	gr.EncryptionKey = os.Getenv("KEY")
