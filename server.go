@@ -28,9 +28,6 @@ func (gr *Goracoon) ListenAndServe() error {
 		defer badgerConnection.Close()
 	}
 
-	// start mail channels
-	go gr.Mail.ListenForMail()
-
 	// start RPC server
 	go gr.listenRPC()
 

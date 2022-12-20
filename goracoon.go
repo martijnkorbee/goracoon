@@ -195,6 +195,9 @@ func (gr *Goracoon) New(rootPath string) error {
 		}
 	}
 
+	// start mail channels
+	go gr.Mail.ListenForMail()
+
 	// add session (init session must be called before routes)
 	session := session.Session{
 		CookieName:     gr.config.cookie.name,
