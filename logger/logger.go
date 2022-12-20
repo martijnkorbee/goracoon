@@ -24,6 +24,7 @@ func (l *Logger) StartLoggers() *zerolog.Logger {
 
 	// add file writer if required
 	if file, _ := strconv.ParseBool(l.FileOutput); file {
+		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 		writers = append(writers, &l.FileConfig)
 	}
 	// add console writer if required
