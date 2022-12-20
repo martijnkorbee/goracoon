@@ -1,10 +1,6 @@
 module ${APP_NAME}
 
-module racoonapp
-
 go 1.19
-
-replace github.com/martijnkorbee/goracoon v1.0.0 => ../github.com/goracoon
 
 require (
 	github.com/CloudyKit/jet/v6 v6.1.0
