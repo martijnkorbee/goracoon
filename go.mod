@@ -1,6 +1,6 @@
 module github.com/martijnkorbee/goracoon
 
-go 1.18
+go 1.19
 
 require (
 	github.com/CloudyKit/jet/v6 v6.1.0

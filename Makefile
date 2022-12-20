@@ -16,8 +16,8 @@ build:
 	@go build -o tmp/goracoon ./cmd/cli
 	@echo "GoRacoon has been built!"
 
-## install: runs go build and puts the binary in GOPATH bin
+## install: runs go build and puts the binary in HOME bin
 install:
-	@echo "Installing GoRacoon in ${GOPATH}/bin ..."
-	@go build -o /${GOPATH}/bin/goracoon ./cmd/cli
+	@echo "Installing GoRacoon in ${HOME}/bin ..."
+	@go build -o ${HOME}/bin/goracoon ./cmd/cli
 	@echo "GoRacoon has been installed!"
