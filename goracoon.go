@@ -3,6 +3,7 @@ package goracoon
 import (
 	"database/sql"
 	"fmt"
+	stdlog "log"
 	"os"
 	"strconv"
 	"time"
@@ -122,6 +123,9 @@ func (gr *Goracoon) New(rootPath string) error {
 		},
 	}
 	gr.Log = l.StartLoggers()
+
+	// overwrite default logger for other packages
+	stdlog.SetOutput(gr.Log)
 
 	httpl := logger.Logger{
 		Debug:         gr.Debug,
