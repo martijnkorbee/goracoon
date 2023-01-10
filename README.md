@@ -1,3 +1,5 @@
+This work is currently discontinued. Please check https://github.com/martijnkorbee/gobaboon for the current iteration.
+
 # GoRacoon 
 
 Laravel like framework with embeded database and caching.
